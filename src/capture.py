@@ -1,9 +1,11 @@
+import string
 import subprocess
 import time
 from threading import Thread
 from queue import Queue, Empty
 import io
 import logging
+from multiprocessing import Process, cpu_count, Queue as QueueMulti
 
 from pydub import AudioSegment
 
@@ -21,9 +23,43 @@ class Capturer:
         self.last_playing_update = None
         self.start_wave_nonblocking = None
         self.sound_interval = .7
-        self.event_interval = .2
+        self.event_interval = 1
 
-    def play_wave_nonblocking(self): # todo collecting and adding to buffer should be in separate thread
+        self.queue = QueueMulti()
+
+    def play_wave2(self):
+        consumer = Process(target=self.consume, args=(self.queue,))
+        consumer.start()
+        producer = Process(target=self.produce, args=(self.queue,))
+        producer.start()
+
+    def produce(self, queue):
+        idx = 0
+        start_time = time.time()
+        last_operation = time.time()
+        produce_interval = 0.2
+        while True:
+            if time.time() - last_operation > produce_interval:
+                print("putting")
+                queue.put(string.ascii_letters[idx])
+                idx+=1
+                last_operation = time.time()
+
+    def consume(self, queue):
+        start_time = time.time()
+        last_operation = time.time()
+        while True:
+            if time.time() - last_operation > self.event_interval:
+                current = []
+                while True:
+                    try:
+                        current.append(queue.get(False))
+                    except Empty:
+                        break
+                print(current)
+                last_operation = time.time()
+
+    def play_wave_nonblocking(self):  # todo collecting and adding to buffer should be in separate thread
         first_skip = 1
 
         ps = subprocess.Popen(self.cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -110,7 +146,7 @@ class Capturer:
 def main():
     cmd = f"parec -d alsa_output.pci-0000_00_1b.0.analog-stereo.monitor --channels 1 --rate {FRAMERATE}"
     capturer = Capturer(cmd)
-    capturer.play_wave_nonblocking()
+    capturer.play_wave2()
 
 
 if __name__ == '__main__':
