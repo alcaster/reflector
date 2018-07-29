@@ -1,3 +1,4 @@
+import argparse
 import subprocess
 import time
 from threading import Thread
@@ -8,22 +9,28 @@ from multiprocessing import Process, Queue as QueueMulti
 
 from pydub import AudioSegment
 
-FRAMERATE = 41000
+parser = argparse.ArgumentParser()
+parser.add_argument("--device", help="Device from which listen to sound output.", type=str,
+                    default="alsa_output.pci-0000_00_1b.0.analog-stereo.monitor")
+parser.add_argument("--frame", help="Framerate", type=int, default=41000)
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
 class Capturer:
-    def __init__(self, cmd):
+    def __init__(self, args):
+        self.args = args
+        self.cmd = f"parec -d {args.device} --channels 1 --rate {args.frame}"
+        logger.info(f"Using cmd: {self.cmd}")
+
         self.playing = True
         self.last_operation = time.time()
-        self.cmd = cmd
         self.last_playing_update = None
         self.start_wave_nonblocking = None
         self.sound_interval = .7
         self.event_interval = .2
-        self.warm_start_time = 1
+        self.warm_start_time = 1.5
 
         self.queue = QueueMulti()
 
@@ -80,7 +87,7 @@ class Capturer:
             current, is_playing = self.queue.get()
             if current:
                 iob = io.BytesIO(current)
-                sound = AudioSegment.from_file(iob, format="raw", channels=1, sample_width=2, frame_rate=FRAMERATE)
+                sound = AudioSegment.from_file(iob, format="raw", channels=1, sample_width=2, frame_rate=self.args.frame)
 
                 num_chunks = 1  # px
                 chunk_size = int(len(sound) / num_chunks)
@@ -122,8 +129,8 @@ class Capturer:
 
 
 def main():
-    cmd = f"parec -d alsa_output.pci-0000_00_1b.0.analog-stereo.monitor --channels 1 --rate {FRAMERATE}"
-    capturer = Capturer(cmd)
+    args = parser.parse_args()
+    capturer = Capturer(args)
     capturer.play_wave()
 
 
