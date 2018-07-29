@@ -1,7 +1,6 @@
 import subprocess
 import time
-from threading import Thread
-from queue import Queue, Empty
+from queue import Empty
 import io
 import logging
 from multiprocessing import Process, Queue as QueueMulti
@@ -23,9 +22,10 @@ class Capturer:
         self.start_wave_nonblocking = None
         self.sound_interval = .7
         self.event_interval = .2
-        self.warm_start_time = 1
+        self.warm_start_time = 2
 
         self.queue = QueueMulti()
+        self.queue_lines = QueueMulti()
 
     def play_wave(self):
         producer = Process(target=self.produce)
@@ -35,9 +35,8 @@ class Capturer:
 
     def produce(self):
         ps = subprocess.Popen(self.cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        q = Queue()
-        t = Thread(target=self.enqueue_output, args=(ps.stdout, q))
-        t.daemon = True
+        t = Process(target=self.enqueue_output, args=(ps.stdout,))
+        # t.daemon = True
         t.start()
 
         last_playing_updated = time.time()
@@ -51,7 +50,7 @@ class Capturer:
         warm_start = True
         while True:
             try:
-                line = q.get_nowait()
+                line = self.queue_lines.get_nowait()
             except Empty:
                 if temporal_playing:
                     not_play_start = time.time()
@@ -114,10 +113,9 @@ class Capturer:
         else:
             return False if this_time - not_play_start > self.sound_interval else True
 
-    @staticmethod
-    def enqueue_output(out, queue):
+    def enqueue_output(self, out):
         for line in iter(out.readline, b''):
-            queue.put(line)
+            self.queue_lines.put(line)
         out.close()
 
 
