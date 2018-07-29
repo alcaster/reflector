@@ -21,8 +21,9 @@ class Capturer:
         self.cmd = cmd
         self.last_playing_update = None
         self.start_wave_nonblocking = None
-        self.sound_interval = .6
-        self.event_interval = .3
+        self.sound_interval = .7
+        self.event_interval = .2
+        self.warm_start_time = 1
 
         self.queue = QueueMulti()
 
@@ -47,6 +48,7 @@ class Capturer:
         buffer = bytearray()
 
         playing = False
+        warm_start = True
         while True:
             try:
                 line = q.get_nowait()
@@ -62,7 +64,9 @@ class Capturer:
                 playing = self.get_playing(not_play_start, temporal_playing)
                 last_playing_updated = time.time()
 
-            if time.time() - last_operation > self.event_interval:
+            if warm_start and time.time() - self.start_wave_nonblocking > self.warm_start_time:
+                warm_start = False
+            if not warm_start and time.time() - last_operation > self.event_interval:
                 last_operation = time.time()
                 self.queue.put((buffer, playing))
                 buffer = bytearray()
