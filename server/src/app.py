@@ -1,10 +1,15 @@
+import argparse
+
 import pigpio
-from flask import Flask, Response
+from flask import Flask
 from flask_restful import Resource, Api, reqparse
 
-# from server.reflector import Reflector
 from pins import PINS
 from reflector import Reflector
+
+parser = argparse.ArgumentParser(description='Display "sound" on led diodes connected to raspberry')
+parser.add_argument('--mute_factor', type=float, default=0.8, help='Colors are to bright, might need to mute max level')
+args = parser.parse_args()
 
 pi = pigpio.pi()
 app = Flask(__name__)
@@ -23,9 +28,10 @@ class Lights(Resource):
         return {'hello': 'world'}
 
     def post(self):
-        args = self.parser.parse_args()
-        val = args.val
+        request_args = self.parser.parse_args()
+        val = request_args.val
         rgb = reflector.append(val)
+        rgb = [int(args.mute_factor * i) for i in rgb]
         pins.set_value_to_all(*rgb)
 
 

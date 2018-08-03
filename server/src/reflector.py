@@ -1,4 +1,4 @@
-from tools import convert_to_rgb
+from tools import convert_to_rgb, clip
 
 
 class Reflector:
@@ -9,4 +9,6 @@ class Reflector:
     def append(self, val) -> [int, int, int]:
         self.values.append(val)
         self.values = self.values[-self.memory_count:]
-        return convert_to_rgb(0, max(max(self.values), 1000), val) if val != 0 else (0, 0, 0)
+        max_values = max(self.values)
+        color = convert_to_rgb(0, max_values, clip(0, max_values, val)) if val != 0 else (0, 0, 0)
+        return color

@@ -14,14 +14,14 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--device", help="Device from which listen to sound output.", type=str,
                     default="alsa_output.pci-0000_00_1b.0.analog-stereo.monitor")
 parser.add_argument("--frame", help="Framerate", type=int, default=41000)
+parser.add_argument("--event_interval", help="How often should it send updates.", type=float, default=.15)
+parser.add_argument("--sound_interval", help="How often should it update is playing.", type=float, default=.6)
+parser.add_argument("--warm_start_time", help="How long should ignore starting bits.", type=float, default=1.4)
+parser.add_argument("--url", help="Url for which is send data.", type=str, default="http://192.168.1.79:8016/lights")
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-url = "http://192.168.1.79"
-port = 8016
-endpoint = "lights"
-adress = f"{url}:{port}/{endpoint}"
 
 class Capturer:
     def __init__(self, args):
@@ -33,9 +33,9 @@ class Capturer:
         self.last_operation = time.time()
         self.last_playing_update = None
         self.start_wave_nonblocking = None
-        self.sound_interval = .6
-        self.event_interval = .2
-        self.warm_start_time = 1.5
+        self.sound_interval = args.sound_interval
+        self.event_interval = args.event_interval
+        self.warm_start_time = args.warm_start_time
 
         self.queue = QueueMulti()
 
@@ -92,16 +92,17 @@ class Capturer:
             current, is_playing = self.queue.get()
             if current:
                 iob = io.BytesIO(current)
-                sound = AudioSegment.from_file(iob, format="raw", channels=1, sample_width=2, frame_rate=self.args.frame)
+                sound = AudioSegment.from_file(iob, format="raw", channels=1, sample_width=2,
+                                               frame_rate=self.args.frame)
 
-                num_chunks = 1  # px
+                num_chunks = 1
                 chunk_size = int(len(sound) / num_chunks)
                 if chunk_size > 0:
                     for i in range(0, len(sound), chunk_size):
                         chunk = sound[i:i + chunk_size]
                         try:
                             loudness_over_time.append(
-                                chunk.rms)  # im not sure by what len(chunk) has to be divisible so there is double try
+                                chunk.rms)  # Not sure by what len(chunk) has to be divisible so there is double try
                         except Exception:
                             try:
                                 loudness_over_time.append(chunk[:-1].rms)
@@ -115,15 +116,13 @@ class Capturer:
                 current_value = 0
 
             logger.info(current_value)
-            requests.post(adress, data={"val": current_value})
-        logger.info(counter)
+            requests.post(self.args.url, data={"val": current_value})
+        logger.info(counter)  # for measuring how many updates was in while(if finite)
 
     def get_playing(self, not_play_start, temporal_playing):
         this_time = time.time()
         if temporal_playing:
             return True
-        elif this_time - self.start_wave_nonblocking < self.sound_interval:  # f.ex update every 1s this called after .5s
-            return False if not_play_start == self.start_wave_nonblocking else True
         else:
             return False if this_time - not_play_start > self.sound_interval else True
 
@@ -142,10 +141,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-    # wavef = wave.open('sound.wav', 'w')
-    # wavef.setnchannels(1)
-    # wavef.setsampwidth(2)
-    # wavef.setframerate(FRAMERATE)
-    # frame = np.frombuffer(buff, np.uint16)
-    # wavef.writeframesraw(line)
