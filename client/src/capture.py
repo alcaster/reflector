@@ -7,6 +7,7 @@ import io
 import logging
 from multiprocessing import Process, Queue as QueueMulti
 
+import requests
 from pydub import AudioSegment
 
 parser = argparse.ArgumentParser()
@@ -14,9 +15,13 @@ parser.add_argument("--device", help="Device from which listen to sound output."
                     default="alsa_output.pci-0000_00_1b.0.analog-stereo.monitor")
 parser.add_argument("--frame", help="Framerate", type=int, default=41000)
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+url = "http://192.168.1.79"
+port = 8016
+endpoint = "lights"
+adress = f"{url}:{port}/{endpoint}"
 
 class Capturer:
     def __init__(self, args):
@@ -28,7 +33,7 @@ class Capturer:
         self.last_operation = time.time()
         self.last_playing_update = None
         self.start_wave_nonblocking = None
-        self.sound_interval = .7
+        self.sound_interval = .6
         self.event_interval = .2
         self.warm_start_time = 1.5
 
@@ -82,7 +87,7 @@ class Capturer:
         start_time = time.time()
         current_value = 0
         counter = 0
-        while time.time() - start_time < 10:
+        while True:
             loudness_over_time = []
             current, is_playing = self.queue.get()
             if current:
@@ -110,6 +115,7 @@ class Capturer:
                 current_value = 0
 
             logger.info(current_value)
+            requests.post(adress, data={"val": current_value})
         logger.info(counter)
 
     def get_playing(self, not_play_start, temporal_playing):
