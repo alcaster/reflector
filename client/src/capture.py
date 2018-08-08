@@ -1,4 +1,5 @@
 import logging
+import os
 from multiprocessing import Process, Queue as QueueMulti
 
 import argparse
@@ -6,6 +7,7 @@ import io
 import requests
 import subprocess
 import time
+from dotenv import load_dotenv
 from pydub import AudioSegment
 from queue import Queue, Empty
 from threading import Thread
@@ -19,6 +21,7 @@ parser.add_argument("--sound_interval", help="How often should it update is play
 parser.add_argument("--warm_start_time", help="How long should ignore starting bits.", type=float, default=1.4)
 parser.add_argument("--url", help="Url for which is send data.", type=str, default="http://192.168.1.79:8016/audio")
 
+load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -116,7 +119,7 @@ class Capturer:
                 current_value = 0
 
             logger.info(current_value)
-            requests.post(self.args.url, data={"val": current_value})
+            requests.post(self.args.url, data={"val": current_value, "token": os.getenv("TOKEN")})
         logger.info(counter)  # for measuring how many updates was in while(if finite)
 
     def get_playing(self, not_play_start, temporal_playing):

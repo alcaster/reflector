@@ -1,11 +1,14 @@
 import argparse
 import pigpio
+from dotenv import load_dotenv
 from flask import Flask
 from flask_restful import Api
 
 from endpoints import RGB, Audio
 from pins import PINS
 from reflector import Reflector
+
+load_dotenv()
 
 parser = argparse.ArgumentParser(description='Display "sound" on led diodes connected to raspberry')
 parser.add_argument('--mute_factor', type=float, default=0.8, help='Colors are to bright, might need to mute max level')
