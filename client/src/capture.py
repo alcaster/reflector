@@ -1,14 +1,14 @@
-import argparse
-import subprocess
-import time
-from threading import Thread
-from queue import Queue, Empty
-import io
 import logging
 from multiprocessing import Process, Queue as QueueMulti
 
+import argparse
+import io
 import requests
+import subprocess
+import time
 from pydub import AudioSegment
+from queue import Queue, Empty
+from threading import Thread
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--device", help="Device from which listen to sound output.", type=str,
@@ -17,7 +17,7 @@ parser.add_argument("--frame", help="Framerate", type=int, default=41000)
 parser.add_argument("--event_interval", help="How often should it send updates.", type=float, default=.15)
 parser.add_argument("--sound_interval", help="How often should it update is playing.", type=float, default=.6)
 parser.add_argument("--warm_start_time", help="How long should ignore starting bits.", type=float, default=1.4)
-parser.add_argument("--url", help="Url for which is send data.", type=str, default="http://192.168.1.79:8016/lights")
+parser.add_argument("--url", help="Url for which is send data.", type=str, default="http://192.168.1.79:8016/audio")
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -107,7 +107,7 @@ class Capturer:
                             try:
                                 loudness_over_time.append(chunk[:-1].rms)
                             except Exception:
-                                print("Cannot calculate rms.")
+                                logger.error("Cannot calculate rms.")
                 if loudness_over_time:
                     current_value = loudness_over_time[0]
                     counter += 1

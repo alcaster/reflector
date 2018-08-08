@@ -1,9 +1,9 @@
 import argparse
-
 import pigpio
 from flask import Flask
-from flask_restful import Resource, Api, reqparse
+from flask_restful import Api
 
+from endpoints import RGB, Audio
 from pins import PINS
 from reflector import Reflector
 
@@ -11,31 +11,14 @@ parser = argparse.ArgumentParser(description='Display "sound" on led diodes conn
 parser.add_argument('--mute_factor', type=float, default=0.8, help='Colors are to bright, might need to mute max level')
 args = parser.parse_args()
 
-pi = pigpio.pi()
-app = Flask(__name__)
-api = Api(app)
-
 reflector = Reflector(50)
+pi = pigpio.pi()
 pins = PINS(pi)
+app = Flask(__name__)
 
-
-class Lights(Resource):
-    def __init__(self):
-        self.parser = reqparse.RequestParser()
-        self.parser.add_argument('val', type=int)
-
-    def get(self):
-        return {'hello': 'world'}
-
-    def post(self):
-        request_args = self.parser.parse_args()
-        val = request_args.val
-        rgb = reflector.append(val)
-        rgb = [int(args.mute_factor * i) for i in rgb]
-        pins.set_value_to_all(*rgb)
-
-
-api.add_resource(Lights, '/lights')
+api = Api(app)
+api.add_resource(RGB, '/rgb', resource_class_kwargs={'pins': pins})
+api.add_resource(Audio, '/audio', resource_class_kwargs={'reflector': reflector, "args": args, "pins": pins})
 
 if __name__ == '__main__':
     try:

@@ -1,2 +1,4 @@
 flask
-flask-restfull
+flask-restful
+pigpio
+python-dotenv
