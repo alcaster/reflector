@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser(description='Display "sound" on led diodes conn
 parser.add_argument('--mute_factor', type=float, default=0.8, help='Colors are to bright, might need to mute max level')
 args = parser.parse_args()
 
-reflector = Reflector(50)
+reflector = Reflector(100)
 pi = pigpio.pi()
 pins = PINS(pi)
 app = Flask(__name__)

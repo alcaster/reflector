@@ -112,14 +112,18 @@ class Capturer:
                             except Exception:
                                 logger.error("Cannot calculate rms.")
                 if loudness_over_time:
-                    current_value = loudness_over_time[0]
+                    current_value = loudness_over_time[0]  # TODO: experiment setting event time based on current rms
                     counter += 1
 
             if not is_playing:
                 current_value = 0
 
             logger.info(current_value)
-            requests.post(self.args.url, data={"val": current_value, "token": os.getenv("TOKEN")})
+            try:
+                requests.post(self.args.url, data={"val": current_value, "token": os.getenv("TOKEN")})
+            except requests.exceptions.RequestException as e:
+                logger.error(e)
+                time.sleep(5)
         logger.info(counter)  # for measuring how many updates was in while(if finite)
 
     def get_playing(self, not_play_start, temporal_playing):
