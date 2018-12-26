@@ -1,13 +1,12 @@
-import logging
-import os
-from multiprocessing import Process, Queue as QueueMulti
-
 import argparse
 import io
+import logging
+import os
 import requests
 import subprocess
 import time
 from dotenv import load_dotenv
+from multiprocessing import Process, Queue as QueueMulti
 from pydub import AudioSegment
 from queue import Queue, Empty
 from threading import Thread
@@ -19,7 +18,7 @@ parser.add_argument("--frame", help="Framerate", type=int, default=41000)
 parser.add_argument("--event_interval", help="How often should it send updates.", type=float, default=.15)
 parser.add_argument("--sound_interval", help="How often should it update is playing.", type=float, default=.6)
 parser.add_argument("--warm_start_time", help="How long should ignore starting bits.", type=float, default=1.4)
-parser.add_argument("--url", help="Url for which is send data.", type=str, default="http://192.168.1.79:8016/audio")
+parser.add_argument("--base_url", help="Url for which is send data.", type=str, default="http://192.168.1.62:8016")
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -41,11 +40,12 @@ class Capturer:
         self.warm_start_time = args.warm_start_time
 
         self.queue = QueueMulti()
+        self.url = self.args.base_url + '/audio'
 
     def play_wave(self):
         producer = Process(target=self.produce)
-        producer.start()
         consumer = Process(target=self.consume)
+        producer.start()
         consumer.start()
 
     def produce(self):
@@ -87,7 +87,6 @@ class Capturer:
                 buffer = bytearray()
 
     def consume(self):
-        start_time = time.time()
         current_value = 0
         counter = 0
         while True:
@@ -120,11 +119,10 @@ class Capturer:
 
             logger.info(current_value)
             try:
-                requests.post(self.args.url, data={"val": current_value, "token": os.getenv("TOKEN")})
+                requests.post(self.url, data={"val": current_value, "token": os.getenv("TOKEN")})
             except requests.exceptions.RequestException as e:
                 logger.error(e)
                 time.sleep(5)
-        logger.info(counter)  # for measuring how many updates was in while(if finite)
 
     def get_playing(self, not_play_start, temporal_playing):
         this_time = time.time()

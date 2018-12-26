@@ -17,6 +17,6 @@ class PINS:
             self.pi.set_PWM_dutycycle(pin, value)
 
     def set_value_to_all(self, r: int, g: int, b: int):
-        self.set_value(PINS.RED, r)
-        self.set_value(PINS.GREEN, g)
-        self.set_value(PINS.BLUE, b)
+        for pin, value in zip([PINS.RED, PINS.GREEN, PINS.BLUE], [r, g, b]):
+            if value is not None:
+                self.set_value(pin, value)

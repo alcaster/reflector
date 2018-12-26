@@ -11,7 +11,8 @@ from reflector import Reflector
 load_dotenv()
 
 parser = argparse.ArgumentParser(description='Display "sound" on led diodes connected to raspberry')
-parser.add_argument('--mute_factor', type=float, default=0.8, help='Colors are to bright, might need to mute max level')
+parser.add_argument('--mute_factor', type=float, default=0.8,
+                    help='Colors are too bright, might need to mute max level')
 args = parser.parse_args()
 
 reflector = Reflector(100)

@@ -1,2 +1,4 @@
 pyaudio
 requests
+python-dotenv
+pydub
