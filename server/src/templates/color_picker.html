@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Color picker</title>
+    <script src="{{ url_for('static', filename='js/jscolor.js') }}"></script>
+    <script>
+        function update(jscolor) {
+            let [r, g, b] = jscolor.rgb;
+            console.log(r, g, b);
+            var params = `r=${parseInt(r)}&g=${parseInt(g)}&b=${parseInt(b)}&token={{token}}`;
+            var xhttp = new XMLHttpRequest();
+            xhttp.open('POST', "rgb", true);
+            xhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            console.log(params);
+            xhttp.send(params);
+        }
+    </script>
+</head>
+<body>
+<input class="jscolor" onchange="update(this.jscolor)" value="cc66ff" size="30" >
+</body>
+</html>
