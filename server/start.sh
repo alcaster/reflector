@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 sudo pigpiod
-source .venv/bin/activate
-export PYTHONPATH=`pwd`/src
-python src/app.py "$@"
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+source $DIR/.venv/bin/activate
+export PYTHONPATH=$DIR/src
+python $DIR/src/app.py "$@"

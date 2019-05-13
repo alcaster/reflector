@@ -8,7 +8,7 @@
         function update(jscolor) {
             let [r, g, b] = jscolor.rgb;
             console.log(r, g, b);
-            var params = `r=${parseInt(r)}&g=${parseInt(g)}&b=${parseInt(b)}&token={{token}}`;
+            var params = `r=${parseInt(r)}&g=${parseInt(g)}&b=${parseInt(b)}`;
             var xhttp = new XMLHttpRequest();
             xhttp.open('POST', "rgb", true);
             xhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');

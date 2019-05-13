@@ -34,7 +34,7 @@ api.add_resource(Sun, '/sun', resource_class_kwargs={"pins": pins, "scheduler": 
 
 @app.route('/color')
 def index():
-    return render_template('color_picker.html', token=os.getenv("TOKEN"))
+    return render_template('color_picker.html')
 
 
 if __name__ == '__main__':

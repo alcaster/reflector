@@ -1,8 +1,8 @@
 import datetime
 import os
 
+from flask import request
 from flask_restful import Resource, reqparse
-from apscheduler.schedulers.background import BackgroundScheduler
 
 
 class RGB(Resource):
@@ -16,8 +16,10 @@ class RGB(Resource):
 
     def post(self):
         request_args = self.parser.parse_args()
-        if os.getenv("TOKEN") != request_args.token:
-            return 400
+
+        if not request.remote_addr.startswith('192.168'):
+            if os.getenv("TOKEN") != request_args.token:
+                return 400
 
         r = request_args.r
         g = request_args.g
