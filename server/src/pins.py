@@ -1,3 +1,6 @@
+from static.color_names import COLOR_MAP
+
+
 class PINS:
     RED = 22
     GREEN = 27
@@ -18,5 +21,10 @@ class PINS:
 
     def set_value_to_all(self, r: int, g: int, b: int):
         for pin, value in zip([PINS.RED, PINS.GREEN, PINS.BLUE], [r, g, b]):
-            if value is not None:
-                self.set_value(pin, value)
+            value = value if value is not None else 0
+            self.set_value(pin, value)
+
+    def set_value_from_name(self, name: str):
+        name = name.lower()
+        if name in COLOR_MAP:
+            self.set_value_to_all(*COLOR_MAP[name])

@@ -11,6 +11,7 @@ class RGB(Resource):
         self.parser.add_argument('r', type=int)
         self.parser.add_argument('g', type=int)
         self.parser.add_argument('b', type=int)
+        self.parser.add_argument('name', type=str)
         self.parser.add_argument('token', type=str)
         self.pins = pins
 
@@ -21,10 +22,14 @@ class RGB(Resource):
             if os.getenv("TOKEN") != request_args.token:
                 return 400
 
-        r = request_args.r
-        g = request_args.g
-        b = request_args.b
-        self.pins.set_value_to_all(r, g, b)
+        name = request_args.name
+        if name:
+            self.pins.set_value_from_name(name)
+        else:
+            r = request_args.r
+            g = request_args.g
+            b = request_args.b
+            self.pins.set_value_to_all(r, g, b)
 
 
 class Audio(Resource):
