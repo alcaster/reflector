@@ -1,5 +1,7 @@
 from static.color_names import COLOR_MAP
 
+current = (0, 0, 0)  # not synchronized purposely to gain speed as it's low importance
+
 
 class PINS:
     RED = 22
@@ -20,9 +22,12 @@ class PINS:
             self.pi.set_PWM_dutycycle(pin, value)
 
     def set_value_to_all(self, r: int, g: int, b: int):
+        global current
+
+        r, g, b = [i if i is not None else 0 for i in [r, g, b]]
         for pin, value in zip([PINS.RED, PINS.GREEN, PINS.BLUE], [r, g, b]):
-            value = value if value is not None else 0
             self.set_value(pin, value)
+        current = (r, g, b)
 
     def set_value_from_name(self, name: str):
         name = name.lower()
