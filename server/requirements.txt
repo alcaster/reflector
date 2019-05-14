@@ -2,3 +2,4 @@ flask
 flask-restful
 pigpio
 python-dotenv
+apscheduler
